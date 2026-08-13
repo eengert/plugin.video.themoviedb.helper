@@ -107,6 +107,16 @@ class ListMDbListNextEpisodesProperties(ListMDbListCustomProperties):
     cache_days = 0
     sort_by = 'airdate'
 
+    @property
+    def next_page(self):
+        return self.page + 1
+
+    @cached_property
+    def final_items(self):
+        # The request limit already includes the configured page multiplier,
+        # so a single API response contains the complete Kodi page.
+        return self.class_pages(self, self.page).items
+
     @cached_property
     def limit(self):
         return min(super().limit, 100)
@@ -124,9 +134,9 @@ class ListMDbListNextEpisodesProperties(ListMDbListCustomProperties):
         response = self.mdblist_api.get_response(
             'upnext',
             limit=self.limit,
-            offset=((self.page - 1) * self.limit),
+            offset=((page - 1) * self.limit),
         )
-        return UncachedMDbListUpNextData(response, self.page, self.limit).data
+        return UncachedMDbListUpNextData(response, page, self.limit).data
 
     def get_mapped_item(self, item, add_infoproperties=None):
         return MDbListUpNextItemMapper(item, add_infoproperties).item
